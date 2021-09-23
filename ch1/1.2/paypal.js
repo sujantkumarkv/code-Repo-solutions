@@ -36,14 +36,20 @@ class Paypal extends Client {
     // check if the sender is in the state
     if (tx.contents.from in this.state == false){
       // if the sender is not in the state, create an account for them
-      this.wallet = EthCrypto.createIdentity();
+      // IT'S KINDA ADD THEM TO THE STATE OF TRANSACTION LEDGER AS AN ENTRY :)
+      this.state[tx.contents.from]= {
+        balance: 0,
+      };  
     }
     // check if the receiver is in the state
     if (tx.contents.to in this.state == false){
       // if the receiver is not in the state, create an account for them
-      this.wallet= EthCrypto.createIdentity();
+      // IT'S KINDA ADD THEM TO THE STATE OF TRANSACTION LEDGER AS AN ENTRY :)
+      this.state[tx.contents.to]= {
+        balance: 0,
+      }; 
     }
-    // once the checks on both accounts pass (they're both in the state), return true
+    // once the checks on both accounts pass (they're both in the state), return true.
     //WHETHER WE HAVE IT IN STATE/NOT;WE CREATE AN ACCOUNT,SO ULTIMATELY WE HAVE IT SO FINALLY GOTTA return true only.
     return true; 
   }
@@ -61,11 +67,11 @@ class Paypal extends Client {
       // if the check passes, return true
       return true;
     }
-    const sender= tx.contents.from;
+    let sender= tx.contents.from;
+    let balance= this.state[sender].balance;
     // if the transaction type is 'check'
     if (tx.contents.type === 'check'){
       // print the balance of the sender to the console
-      balance= this.state[sender].balance;
       console.log(`Your available balance is :: ${balance}`);
       // return false so that the stateTransitionFunction does not process the tx
       return false;  
@@ -76,7 +82,7 @@ class Paypal extends Client {
       // check that the transaction amount is positive and the sender has an account balance greater than or equal to the transaction amount
       // if a check fails, print an error to the console stating why and return false
 
-      if ((this.state[sender].balance - tx.contents.amount) < 0){
+      if (this.state[sender].balance - tx.contents.amount < 0){
         console.log("Error! Transaction amount crossed available balance.");
         return false;
       }
@@ -87,7 +93,7 @@ class Paypal extends Client {
 
   // Checks if a transaction is valid, adds it to the transaction history, and updates the state of accounts and balances
   checkTx(tx) {
-    const flag= 0;
+    let flag= 0;
     // check that the transaction signature is valid
     if (this.checkTxSignature(tx)){
       // check that the transaction sender and receiver are in the state
@@ -129,5 +135,19 @@ class Paypal extends Client {
     }
   }
 }
+/*
+TO CHECK the error of this.state[tx.contents.from] which said can't use string as object property.
+So, the object inplace of <this> gives the same address as <tx.contents.from> & <this.wallet.address> BUT
+the <tx> should be created as Paypal() object, with object <a> created below with Client(), the objTx created from it
+doesnt' give the same address values. I'm not sure even if it needs to be similar or what other conditions are.
 
+let obj= new Paypal();
+//let a= new Client();
+console.log(obj.state);
+const objTx= a.generateTx(obj.wallet.address, 0, 'check');
+//console.log(obj.wallet);
+//console.log(typeof obj.state[obj.wallet.address])
+console.log(obj.state[obj.wallet.address].balance);
+console.log(objTx.contents.from) //same as <obj.wallet.address> IF <objTx> from <obj.generateTx> & not <a.generateTx> 
+*/
 module.exports = Paypal;
